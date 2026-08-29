@@ -1,0 +1,22 @@
+{
+  "hosting": {
+    "site": "fedora-inventory-management",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "*.docx",
+      "*.pdf",
+      "*.rtf",
+      "*.zip",
+      "*.cmd",
+      "*.ps1",
+      "*.log",
+      "Generate*.ps1",
+      ".tmp_*"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false
+  }
+}

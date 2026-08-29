@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fedora Inventory Management</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="auth-checking">
+    <section class="auth-screen hidden" id="authScreen">
+      <form class="auth-card" id="loginForm">
+        <img class="auth-logo" src="fedora-logo.png" alt="Fedora logo" />
+        <h1>Fedora Inventory</h1>
+        <p>Login to manage catalogue, warehouse stock, and dispatch planning.</p>
+        <label>
+          Email
+          <input id="loginEmail" type="email" autocomplete="email" required />
+        </label>
+        <label>
+          Password
+          <input id="loginPassword" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit" id="loginButton">Login</button>
+        <small id="loginMessage"></small>
+      </form>
+    </section>
+
+    <div class="app-shell app-locked" id="appShell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-logo" src="fedora-logo.png" alt="Fedora logo" />
+          <div>
+            <strong>FEDORA</strong>
+            <small>Inventory Management</small>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Main navigation">
+          <button class="nav-link active" data-view="dashboard" data-title="Dashboard">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 14a8 8 0 1 1 16 0"></path><path d="M12 14l4-4"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><path d="M12 6v.01"></path></svg>
+            </span>
+            <span class="nav-text">Dashboard</span>
+          </button>
+          <button class="nav-link" data-view="catalogue" data-title="Catalogue Master">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v17H6.5A2.5 2.5 0 0 0 4 22z"></path><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v17h5.5A2.5 2.5 0 0 1 20 22z"></path><path d="M8 7h1"></path><path d="M15 7h1"></path></svg>
+            </span>
+            <span class="nav-text">Catalogue Master</span>
+          </button>
+          <button class="nav-link" data-view="uploads" data-title="Inventory Uploads">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"></path><path d="M14 3v5h5"></path><path d="M12 17V9"></path><path d="m8.5 12.5 3.5-3.5 3.5 3.5"></path></svg>
+            </span>
+            <span class="nav-text">Inventory Uploads</span>
+          </button>
+          <button class="nav-link" data-view="transfers" data-title="Dispatch Planning">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 8h11v8H3z"></path><path d="M14 11h3l3 3v2h-6z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="17" cy="18" r="2"></circle><path d="M5 5h5"></path><path d="m8 3 2 2-2 2"></path></svg>
+            </span>
+            <span class="nav-text">Dispatch Planning</span>
+          </button>
+          <button class="nav-link" data-view="unmetShortages" data-title="Unmet Shortages">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 8l7-4 7 4-7 4z"></path><path d="M5 8v8l7 4 7-4V8"></path><path d="M12 12v8"></path><path d="M19 5l2 2"></path><path d="M21 5l-2 2"></path></svg>
+            </span>
+            <span class="nav-text">Unmet Shortages</span>
+          </button>
+          <button class="nav-link nav-link-with-badge" data-view="notifications" data-title="Logs">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 4h8l1 2h2v15H5V6h2z"></path><path d="M9 11h6"></path><path d="M9 15h6"></path><path d="M9 19h4"></path></svg>
+            </span>
+            <span class="nav-text">Logs</span>
+            <span class="notification-badge" id="notificationBadge">0</span>
+          </button>
+        </nav>
+        <div class="sidebar-profile" id="sidebarProfile">
+          <div class="profile-avatar" id="profileAvatar">F</div>
+          <div class="profile-copy">
+            <strong id="profileName">Fedora User</strong>
+            <small id="profileRole">Employee</small>
+          </div>
+          <button class="profile-logout" id="logoutBtn" type="button" title="Logout" aria-label="Logout">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Panipat Hub · Delhi · Bangalore</p>
+            <h1 id="viewTitle">Dashboard</h1>
+          </div>
+          <div class="top-actions">
+            <button class="ghost" id="reportIssueBtn">Report Issue</button>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboard">
+          <div class="welcome-strip" id="welcomeStrip">Welcome back.</div>
+          <div class="summary-grid">
+            <article class="metric clickable-card" data-dashboard-view="catalogue">
+              <span>Active SKUs</span>
+              <strong id="activeSkuCount">0</strong>
+              <small>All Locations</small>
+            </article>
+            <article class="metric clickable-card" data-dashboard-warehouse="Delhi">
+              <span>Delhi Shortages</span>
+              <strong id="delhiShortageCount">0</strong>
+              <small>Short SKUs</small>
+            </article>
+            <article class="metric clickable-card" data-dashboard-warehouse="Bangalore">
+              <span>Bangalore Shortages</span>
+              <strong id="bangaloreShortageCount">0</strong>
+              <small>Short SKUs</small>
+            </article>
+            <article class="metric clickable-card" data-dashboard-movement-shortcut>
+              <span>Pallet Ready / In Transit</span>
+              <strong id="movementCount">0 / 0</strong>
+              <small>Pallets</small>
+            </article>
+          </div>
+
+          <div class="dashboard-panels">
+            <section class="panel">
+              <h2>Warehouse Stock Summary</h2>
+              <div class="warehouse-chart" id="warehouseStockChart"></div>
+              <div id="stockSummary"></div>
+            </section>
+            <section class="panel">
+              <h2>Dispatch Tracker</h2>
+              <div id="dispatchTracker"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="catalogue">
+          <div class="section-head">
+            <div>
+              <h2>Catalogue Master</h2>
+              <p>Add catalogue name, box size, and SKU/pattern numbers before uploading inventory.</p>
+            </div>
+          </div>
+          <section class="panel import-panel">
+            <h2>Import Catalogue Master</h2>
+            <p class="muted">Upload Excel/CSV with columns: catalogue, sku, box_size.</p>
+            <div class="import-row">
+              <label class="file-control">
+                <input type="file" accept=".xlsx,.csv,.txt,.tsv" id="catalogueImportFile" />
+                <span class="file-button">Choose File</span>
+                <span class="file-name" id="catalogueImportName">No file chosen</span>
+              </label>
+              <button id="catalogueImportBtn" class="small-action" type="button">Import Catalogue Master</button>
+            </div>
+            <div class="sample-downloads">
+              <span>Need the format?</span>
+              <button type="button" class="sample-link" id="downloadCatalogueCsv">Download sample CSV</button>
+              <button type="button" class="sample-link" id="downloadCatalogueExcel">Download sample Excel</button>
+            </div>
+            <div id="catalogueImportMessage"></div>
+          </section>
+          <form class="form-grid" id="catalogueForm">
+            <label>
+              Catalogue name
+              <input id="catalogueName" required placeholder="Korea Classic" />
+            </label>
+            <label>
+              Box size
+              <input id="boxSize" required type="number" min="1" placeholder="12" />
+            </label>
+            <label class="wide">
+              SKU / pattern numbers
+              <textarea id="skuList" required rows="7" placeholder="Paste one SKU per line, or comma separated"></textarea>
+            </label>
+            <div class="wide sku-preview-wrap">
+              <div class="preview-head">
+                <span id="skuPreviewCount">0 SKUs detected</span>
+                <button type="button" class="text-button" id="clearSkuPreview">Clear</button>
+              </div>
+              <div class="sku-preview" id="skuPreview"></div>
+            </div>
+            <button type="submit" class="catalogue-submit">Add Catalogue SKUs</button>
+          </form>
+          <div class="table-wrap catalogue-summary-wrap">
+            <table class="catalogue-control-table">
+              <thead>
+                <tr>
+                  <th>Catalogue</th>
+                  <th>Box Size</th>
+                  <th>Total SKUs</th>
+                  <th>Delhi Refill</th>
+                  <th>Bangalore Refill</th>
+                </tr>
+              </thead>
+              <tbody id="catalogueRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="uploads">
+          <div class="section-head">
+            <div>
+              <h2>Inventory Uploads</h2>
+              <p>Upload Zoho Excel/CSV exports with columns: sku and quantity_available_ for_ sale.</p>
+            </div>
+          </div>
+          <div class="upload-grid">
+            <article class="upload-card">
+              <h3>Panipat</h3>
+              <label class="file-control drop-zone" data-drop="Panipat">
+                <input type="file" accept=".xlsx,.csv,.txt,.tsv" data-upload="Panipat" />
+                <span class="file-button">Choose File</span>
+                <span class="file-name" data-file-name="Panipat">No file chosen or drag file here</span>
+                <button class="clear-file" type="button" data-clear-file="Panipat" aria-label="Remove Panipat file">×</button>
+              </label>
+              <button data-import="Panipat">Import Panipat</button>
+            </article>
+            <article class="upload-card">
+              <h3>Delhi</h3>
+              <label class="file-control drop-zone" data-drop="Delhi">
+                <input type="file" accept=".xlsx,.csv,.txt,.tsv" data-upload="Delhi" />
+                <span class="file-button">Choose File</span>
+                <span class="file-name" data-file-name="Delhi">No file chosen or drag file here</span>
+                <button class="clear-file" type="button" data-clear-file="Delhi" aria-label="Remove Delhi file">×</button>
+              </label>
+              <button data-import="Delhi">Import Delhi</button>
+            </article>
+            <article class="upload-card">
+              <h3>Bangalore</h3>
+              <label class="file-control drop-zone" data-drop="Bangalore">
+                <input type="file" accept=".xlsx,.csv,.txt,.tsv" data-upload="Bangalore" />
+                <span class="file-button">Choose File</span>
+                <span class="file-name" data-file-name="Bangalore">No file chosen or drag file here</span>
+                <button class="clear-file" type="button" data-clear-file="Bangalore" aria-label="Remove Bangalore file">×</button>
+              </label>
+              <button data-import="Bangalore">Import Bangalore</button>
+            </article>
+          </div>
+          <div id="uploadMessages" class="compact-status"></div>
+        </section>
+
+        <section class="view" id="transfers">
+          <div class="section-head">
+            <div>
+              <h2>Dispatch Planning</h2>
+              <p>Create Pallet Ready SOs, then merge them into dispatch batches.</p>
+            </div>
+            <div class="segmented">
+              <button class="segment active" data-transfer-warehouse="Delhi">Delhi</button>
+              <button class="segment" data-transfer-warehouse="Bangalore">Bangalore</button>
+            </div>
+          </div>
+
+          <section class="panel">
+            <div class="section-head compact-section-head">
+              <div>
+                <h2>Shortage Action Summary</h2>
+                <p>Select SKUs from this table to create Pallet Ready SOs.</p>
+              </div>
+            </div>
+            <div class="inline-form">
+              <input id="soNumber" placeholder="Sales order number" />
+              <button id="createPalletBtn">Confirm Pallet Ready</button>
+              <button id="exportSelectedShortage" class="ghost" type="button">Export Delhi Shortage CSV</button>
+            </div>
+            <div class="table-tools compact-tools">
+              <label>
+                Search pattern
+                <input id="transferSearch" placeholder="Search SKU..." />
+              </label>
+              <label>
+                Filter catalogue
+                <select id="transferCatalogueFilter">
+                  <option value="">All catalogues</option>
+                </select>
+              </label>
+              <fieldset class="status-filter-group" aria-label="Filter status">
+                <legend>Filter status</legend>
+                <label><input type="checkbox" value="Recommended" data-transfer-status-filter checked /> Recommended</label>
+                <label><input type="checkbox" value="Manual Dispatch" data-transfer-status-filter checked /> Manual Dispatch</label>
+                <label><input type="checkbox" value="Covered" data-transfer-status-filter checked /> Covered</label>
+              </fieldset>
+            </div>
+            <div class="table-wrap dispatch-table-wrap">
+              <table class="dashboard-table transfer-table">
+                <colgroup>
+                  <col class="col-select" />
+                  <col class="col-sku" />
+                  <col class="col-catalogue" />
+                  <col class="col-number" />
+                  <col class="col-number" />
+                  <col class="col-number" />
+                  <col class="col-number" />
+                  <col class="col-recommended" />
+                  <col class="col-status" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th><label class="select-all-cell"><input type="checkbox" id="selectAllSummary" /><span>Select<br />All</span></label></th>
+                    <th>SKU</th>
+                    <th>Catalogue</th>
+                    <th>Current Stock</th>
+                    <th>Pallet Ready</th>
+                    <th>In Transit</th>
+                    <th>Panipat Stock</th>
+                    <th>Recommended</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dispatchActionSummaryRows"></tbody>
+                <tfoot id="dispatchActionSummaryTotals"></tfoot>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Pallet Ready SOs</h2>
+            <button id="createBatchBtn" class="small-action">Create Dispatch Batch</button>
+            <div id="palletReadyList" class="stack"></div>
+          </section>
+
+          <section class="panel">
+            <h2>Dispatch Batches</h2>
+            <div id="batchList" class="stack"></div>
+          </section>
+
+          <section class="panel">
+            <h2>Voided ASOs</h2>
+            <div id="voidedSoList" class="stack"></div>
+          </section>
+        </section>
+
+        <section class="view" id="unmetShortages">
+          <div class="section-head">
+            <div>
+              <h2>Unmet Shortages</h2>
+              <p>Short SKUs where Panipat does not currently have one full box available.</p>
+            </div>
+            <div class="segmented">
+              <button class="segment active" data-unmet-warehouse="Delhi">Delhi</button>
+              <button class="segment" data-unmet-warehouse="Bangalore">Bangalore</button>
+            </div>
+          </div>
+          <div class="table-tools compact-tools">
+            <label>
+              Search pattern
+              <input id="unmetSearch" placeholder="Search unmet SKU..." />
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Catalogue</th>
+                  <th>Current Stock</th>
+                  <th>Pallet Ready</th>
+                  <th>In Transit</th>
+                  <th>Box Size</th>
+                  <th>Panipat Stock</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="unmetShortageRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="notifications">
+          <div class="section-head">
+            <div>
+              <h2>Logs</h2>
+              <p>Track catalogue uploads, inventory imports, dispatch batches, and voided SOs in one place.</p>
+            </div>
+            <button type="button" class="ghost mark-read-action" id="markNotificationsRead">Mark all as read</button>
+          </div>
+          <div class="summary-grid update-summary">
+            <article class="metric">
+              <span>Panipat Last Update</span>
+              <strong id="panipatLastUpdate">-</strong>
+            </article>
+            <article class="metric">
+              <span>Delhi Last Update</span>
+              <strong id="delhiLastUpdate">-</strong>
+            </article>
+            <article class="metric">
+              <span>Bangalore Last Update</span>
+              <strong id="bangaloreLastUpdate">-</strong>
+            </article>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Warehouse</th>
+                  <th>Message</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="notificationRows"></tbody>
+            </table>
+          </div>
+          <div class="section-head sub-section-head">
+            <div>
+              <h2>Issue Reports</h2>
+              <p>Manual issues reported by users from inside the app.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Reported By</th>
+                  <th>Warehouse</th>
+                  <th>Page</th>
+                  <th>Issue</th>
+                  <th>Screenshots</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="issueReportRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="modal-backdrop hidden" id="issueModal" aria-hidden="true">
+      <form class="issue-modal" id="issueForm">
+        <div class="modal-head">
+          <div>
+            <h2>Report Issue</h2>
+            <p>Describe the problem and attach screenshots if needed.</p>
+          </div>
+          <button class="icon-button" type="button" id="closeIssueModal" aria-label="Close issue report">×</button>
+        </div>
+        <label>
+          Issue title
+          <input id="issueTitle" placeholder="Example: Catalogue master not uploading" required />
+        </label>
+        <label>
+          Details
+          <textarea id="issueDescription" rows="5" placeholder="Tell us what happened, what page you were using, and what you expected." required></textarea>
+        </label>
+        <label>
+          Attach screenshots
+          <span class="issue-file-control">
+            <input id="issueScreenshots" type="file" accept="image/png,image/jpeg,image/webp" multiple />
+            <span>Choose screenshots</span>
+          </span>
+          <small>You can attach more than one screenshot from the correct page.</small>
+        </label>
+        <div class="attachment-list" id="issueAttachmentList">No screenshots selected.</div>
+        <div class="issue-form-message" id="issueFormMessage"></div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" id="cancelIssueReport">Cancel</button>
+          <button type="submit" id="submitIssueReport">Save Issue</button>
+        </div>
+      </form>
+    </div>
+
+    <template id="emptyState">
+      <tr>
+        <td colspan="9" class="empty">No records yet.</td>
+      </tr>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
