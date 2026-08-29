@@ -1,0 +1,31 @@
+# Local operating-system files
+.DS_Store
+Thumbs.db
+
+# Firebase CLI credentials, caches, and local state
+.firebase/
+.firebase-cli-config/
+firebase-debug.log
+firebase-debug.*.log
+
+# Temporary working directories and generated intermediates
+.tmp_*/
+*.log
+prd_docx_tmp.zip
+
+# Internal reference documents are retained locally, not published to GitHub
+*.pdf
+*.docx
+*.rtf
+
+# Local environment and secret files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and editor settings
+node_modules/
+.vscode/
+.idea/
