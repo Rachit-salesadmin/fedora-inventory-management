@@ -26,6 +26,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_KEGfINQNc-eVAYFW8RynrA_Em55TpYL
 const ISSUE_SCREENSHOT_BUCKET = "issue-screenshots";
 const ISSUE_ALERT_FUNCTION = "send-issue-alert";
 const TECHNICAL_ALERT_DEDUPE_MS = 30 * 60 * 1000;
+const AUTH_STARTUP_TIMEOUT_MS = 15000;
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 let currentUser = null;
 let currentProfile = null;
@@ -158,7 +159,8 @@ async function loadCloudState() {
   const { data, error } = await supabaseClient.from("app_state").select("data").eq("id", "main").maybeSingle();
   if (error) throw error;
 
-  if (hasUsefulCloudData(data?.data)) {
+  const loadedCloudData = hasUsefulCloudData(data?.data);
+  if (loadedCloudData) {
     applyingCloudState = true;
     state = normalizeState(data.data);
     localStorage.setItem("fedoraInventoryState", JSON.stringify(state));
@@ -166,7 +168,23 @@ async function loadCloudState() {
   }
 
   cloudReady = true;
-  await saveCloudState();
+  if (!loadedCloudData) await saveCloudState();
+}
+
+function withTimeout(promise, milliseconds, message) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), milliseconds);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+function friendlyConnectionMessage(error, fallback) {
+  const message = String(error?.message || error || "");
+  if (/failed to fetch|network|timeout|taking too long/i.test(message)) {
+    return "The secure sign-in service is temporarily unavailable. Please wait a minute and try again.";
+  }
+  return message || fallback;
 }
 
 function formatDateTime(value = new Date()) {
@@ -306,6 +324,16 @@ function simpleHash(value) {
   }, 0).toString(16);
 }
 
+function isPasswordRecoveryUrl() {
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const queryParams = new URLSearchParams(window.location.search);
+  return (
+    hashParams.get("type") === "recovery" ||
+    queryParams.get("type") === "recovery" ||
+    queryParams.get("mode") === "recovery"
+  );
+}
+
 function showLoginScreen(message = "") {
   passwordRecoveryMode = false;
   document.body.classList.remove("auth-checking");
@@ -337,8 +365,11 @@ async function loadUserProfile(user) {
 
 async function enterAuthenticatedApp(user) {
   currentUser = user;
-  currentProfile = await loadUserProfile(user);
-  await loadCloudState();
+  const [profile] = await Promise.all([
+    loadUserProfile(user),
+    loadCloudState(),
+  ]);
+  currentProfile = profile;
   showAppSession(user);
   render();
 }
@@ -350,11 +381,12 @@ async function initializeAuth() {
   }
 
   try {
-    const { data } = await supabaseClient.auth.getSession();
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const queryParams = new URLSearchParams(window.location.search);
-    const isRecoveryLink = hashParams.get("type") === "recovery" || queryParams.get("type") === "recovery";
-    if (passwordRecoveryMode || isRecoveryLink) {
+    const { data } = await withTimeout(
+      supabaseClient.auth.getSession(),
+      AUTH_STARTUP_TIMEOUT_MS,
+      "Secure sign-in is taking too long."
+    );
+    if (passwordRecoveryMode || isPasswordRecoveryUrl()) {
       showPasswordResetScreen();
       return;
     }
@@ -365,7 +397,7 @@ async function initializeAuth() {
     }
   } catch (error) {
     console.error(error);
-    showLoginScreen(error.message || "Could not start the app. Please refresh.");
+    showLoginScreen(friendlyConnectionMessage(error, "Could not start the app. Please refresh."));
   }
 }
 
@@ -405,13 +437,13 @@ async function handleForgotPassword() {
   if (button) button.disabled = true;
 
   try {
-    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+    const redirectTo = `${window.location.origin}${window.location.pathname}?mode=recovery`;
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
     if (error) throw error;
     setLoginMessage("Password reset email sent. Please check your inbox and spam folder.");
   } catch (error) {
     console.error(error);
-    setLoginMessage(error.message || "Could not send the reset email. Please try again.");
+    setLoginMessage(friendlyConnectionMessage(error, "Could not send the reset email. Please try again."));
   } finally {
     if (button) button.disabled = false;
   }

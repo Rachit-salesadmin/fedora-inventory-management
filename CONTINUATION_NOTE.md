@@ -11,6 +11,20 @@ Updated: 7 September 2026 (Asia/Kolkata)
 - Deployed to `https://fedora-inventory-management.web.app` on 7 September 2026 and verified that the live login page shows the action without browser errors.
 - The production URL should be listed in Supabase Authentication redirect URLs for emailed recovery links to return to the live app; dashboard verification is pending because a fresh Supabase dashboard sign-in is required.
 
+## Supabase pause and startup recovery
+
+- On 7 September 2026, the live app showed a blank page for 30–50 seconds and password recovery returned `Failed to fetch`.
+- Root cause confirmed in the Supabase dashboard: `Fedora Inventory Production` was paused, so its project hostname did not resolve.
+- Project restoration was started from the Supabase dashboard; Supabase confirmed that existing data and storage remain safe.
+- Added an immediate `Starting securely…` screen so startup never appears blank.
+- Profile and cloud-state requests now run in parallel.
+- Removed the redundant full cloud-state upload that previously ran after every successful cloud-state download.
+- Added a 15-second authentication startup timeout and user-friendly network/service error messages.
+- Password-reset link failure was traced to Supabase Auth using `http://localhost:3000` as its Site URL with no allowed redirects.
+- Supabase Site URL was corrected to `https://fedora-inventory-management.web.app` and `https://fedora-inventory-management.web.app/**` was added to the Redirect URLs allow list.
+- Reset emails created before this correction still contain the old localhost destination and must be replaced by a newly requested reset email.
+- Recovery links now include `?mode=recovery`, and the locked dashboard shell is fully hidden while setting a new password. Supabase intentionally creates a temporary recovery session, but it must never be presented as a normal dashboard login.
+
 ## Backup review
 
 The transferred backups were treated as read-only. Relevant transcripts were found under:

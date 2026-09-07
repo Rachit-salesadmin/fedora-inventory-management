@@ -8,6 +8,12 @@
   </head>
   <body class="auth-checking">
     <section class="auth-screen hidden" id="authScreen">
+      <div class="auth-loading" id="authLoading" role="status" aria-live="polite">
+        <img class="auth-logo" src="fedora-logo.png" alt="Fedora logo" />
+        <h1>Fedora Inventory</h1>
+        <p>Starting securely…</p>
+        <span class="auth-spinner" aria-hidden="true"></span>
+      </div>
       <form class="auth-card" id="loginForm">
         <img class="auth-logo" src="fedora-logo.png" alt="Fedora logo" />
         <h1>Fedora Inventory</h1>
