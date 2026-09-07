@@ -1,6 +1,15 @@
 # Inventory Management App — Continuation Note
 
-Updated: 21 July 2026 (Asia/Kolkata)
+Updated: 7 September 2026 (Asia/Kolkata)
+
+## Password recovery update
+
+- Added a `Forgot password?` action to the login screen.
+- Supabase Auth sends the reset email to the entered user email address.
+- The emailed recovery link returns the user to the app and shows a dedicated new-password form.
+- The form requires at least eight characters and matching password confirmation, then signs the user out so they can log in with the new password.
+- Deployed to `https://fedora-inventory-management.web.app` on 7 September 2026 and verified that the live login page shows the action without browser errors.
+- The production URL should be listed in Supabase Authentication redirect URLs for emailed recovery links to return to the live app; dashboard verification is pending because a fresh Supabase dashboard sign-in is required.
 
 ## Backup review
 

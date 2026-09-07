@@ -75,6 +75,7 @@ let catalogueStickyFrame = 0;
 let activeCatalogueStickyTable = null;
 let catalogueImportMessageTimer = null;
 let issueScreenshotFiles = [];
+let passwordRecoveryMode = false;
 
 function loadState() {
   const saved = localStorage.getItem("fedoraInventoryState");
@@ -252,7 +253,17 @@ function clearOldInventoryDataOnce() {
 
 function setLoginMessage(message) {
   const element = document.querySelector("#loginMessage");
-  if (element) element.textContent = message || "";
+  if (element) {
+    element.textContent = message || "";
+    element.classList.toggle("success", /sent|updated/i.test(message || ""));
+  }
+}
+
+function setResetPasswordMessage(message, success = false) {
+  const element = document.querySelector("#resetPasswordMessage");
+  if (!element) return;
+  element.textContent = message || "";
+  element.classList.toggle("success", success);
 }
 
 function showAppSession(user) {
@@ -296,10 +307,23 @@ function simpleHash(value) {
 }
 
 function showLoginScreen(message = "") {
+  passwordRecoveryMode = false;
   document.body.classList.remove("auth-checking");
   document.querySelector("#authScreen")?.classList.remove("hidden");
   document.querySelector("#appShell")?.classList.add("app-locked");
+  document.querySelector("#loginForm")?.classList.remove("hidden");
+  document.querySelector("#resetPasswordForm")?.classList.add("hidden");
   setLoginMessage(message);
+}
+
+function showPasswordResetScreen(message = "") {
+  passwordRecoveryMode = true;
+  document.body.classList.remove("auth-checking");
+  document.querySelector("#authScreen")?.classList.remove("hidden");
+  document.querySelector("#appShell")?.classList.add("app-locked");
+  document.querySelector("#loginForm")?.classList.add("hidden");
+  document.querySelector("#resetPasswordForm")?.classList.remove("hidden");
+  setResetPasswordMessage(message);
 }
 
 async function loadUserProfile(user) {
@@ -327,6 +351,13 @@ async function initializeAuth() {
 
   try {
     const { data } = await supabaseClient.auth.getSession();
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const queryParams = new URLSearchParams(window.location.search);
+    const isRecoveryLink = hashParams.get("type") === "recovery" || queryParams.get("type") === "recovery";
+    if (passwordRecoveryMode || isRecoveryLink) {
+      showPasswordResetScreen();
+      return;
+    }
     if (data.session?.user) {
       await enterAuthenticatedApp(data.session.user);
     } else {
@@ -354,6 +385,66 @@ async function handleLogin(event) {
   } catch (error) {
     console.error(error);
     showLoginScreen(error.message || "Login failed. Please check email and password.");
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function handleForgotPassword() {
+  const emailInput = document.querySelector("#loginEmail");
+  const button = document.querySelector("#forgotPasswordBtn");
+  const email = emailInput?.value.trim() || "";
+
+  if (!email) {
+    setLoginMessage("Enter your email address first, then select Forgot password.");
+    emailInput?.focus();
+    return;
+  }
+
+  setLoginMessage("Sending password reset email...");
+  if (button) button.disabled = true;
+
+  try {
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw error;
+    setLoginMessage("Password reset email sent. Please check your inbox and spam folder.");
+  } catch (error) {
+    console.error(error);
+    setLoginMessage(error.message || "Could not send the reset email. Please try again.");
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function handlePasswordReset(event) {
+  event.preventDefault();
+  const button = document.querySelector("#resetPasswordButton");
+  const password = document.querySelector("#newPassword")?.value || "";
+  const confirmation = document.querySelector("#confirmNewPassword")?.value || "";
+
+  if (password.length < 8) {
+    setResetPasswordMessage("Use at least 8 characters for the new password.");
+    return;
+  }
+  if (password !== confirmation) {
+    setResetPasswordMessage("The two passwords do not match.");
+    return;
+  }
+
+  setResetPasswordMessage("Updating password...");
+  if (button) button.disabled = true;
+
+  try {
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    if (error) throw error;
+    await supabaseClient.auth.signOut();
+    history.replaceState({}, document.title, window.location.pathname);
+    document.querySelector("#resetPasswordForm")?.reset();
+    showLoginScreen("Password updated. You can now log in with your new password.");
+  } catch (error) {
+    console.error(error);
+    setResetPasswordMessage(error.message || "Could not update the password. Please request a new reset link.");
   } finally {
     if (button) button.disabled = false;
   }
@@ -2839,6 +2930,8 @@ function bindEvents() {
   document.querySelector("#exportSelectedShortage").addEventListener("click", exportSelectedDispatchShortage);
 
   document.querySelector("#loginForm").addEventListener("submit", handleLogin);
+  document.querySelector("#forgotPasswordBtn").addEventListener("click", handleForgotPassword);
+  document.querySelector("#resetPasswordForm").addEventListener("submit", handlePasswordReset);
   document.querySelector("#logoutBtn").addEventListener("click", handleLogout);
   document.querySelector("#reportIssueBtn").addEventListener("click", reportIssue);
   document.querySelector("#issueForm").addEventListener("submit", submitIssueReport);
@@ -2875,4 +2968,7 @@ function updateSelectedFile(warehouse, file) {
 normalizeDefaultMaximums();
 bindEvents();
 installErrorMonitoring();
+supabaseClient?.auth.onAuthStateChange((event) => {
+  if (event === "PASSWORD_RECOVERY") showPasswordResetScreen();
+});
 initializeAuth();

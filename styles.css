@@ -73,6 +73,10 @@ body.auth-checking .app-shell {
   width: min(100%, 420px);
 }
 
+.auth-card.hidden {
+  display: none;
+}
+
 .auth-logo {
   height: 72px;
   object-fit: contain;
@@ -99,6 +103,24 @@ body.auth-checking .app-shell {
 .auth-card small {
   color: var(--danger);
   min-height: 18px;
+}
+
+.auth-card small.success {
+  color: var(--ok);
+}
+
+.auth-link {
+  align-self: center;
+  background: transparent;
+  color: var(--brand-2);
+  padding: 2px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-link:hover {
+  background: transparent;
+  color: #9a6700;
 }
 
 button,

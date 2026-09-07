@@ -13,8 +13,12 @@
       "*.cmd",
       "*.ps1",
       "*.log",
+      "*.md",
+      "*.sql",
       "Generate*.ps1",
-      ".tmp_*"
+      ".tmp_*",
+      ".tmp_*/**",
+      "supabase/**"
     ],
     "cleanUrls": true,
     "trailingSlash": false

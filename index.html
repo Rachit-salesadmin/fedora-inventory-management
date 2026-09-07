@@ -21,7 +21,24 @@
           <input id="loginPassword" type="password" autocomplete="current-password" required />
         </label>
         <button type="submit" id="loginButton">Login</button>
+        <button class="auth-link" type="button" id="forgotPasswordBtn">Forgot password?</button>
         <small id="loginMessage"></small>
+      </form>
+
+      <form class="auth-card hidden" id="resetPasswordForm">
+        <img class="auth-logo" src="fedora-logo.png" alt="Fedora logo" />
+        <h1>Set a new password</h1>
+        <p>Enter a new password for your Fedora Inventory account.</p>
+        <label>
+          New password
+          <input id="newPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <label>
+          Confirm new password
+          <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <button type="submit" id="resetPasswordButton">Update password</button>
+        <small id="resetPasswordMessage"></small>
       </form>
     </section>
 
